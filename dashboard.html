@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stress Level Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        canvas {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stress Level Dashboard</h1>
+    <div>
+        <canvas id="stressChart"></canvas>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Stress Level</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable">
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchData() {
+            const response = await fetch("fetch_data.php");
+            const data = await response.json();
+            return data;
+        }
+
+        function populateTable(data) {
+            const tableBody = document.getElementById("dataTable");
+            data.forEach(entry => {
+                const row = document.createElement("tr");
+                const timestampCell = document.createElement("td");
+                const stressLevelCell = document.createElement("td");
+
+                timestampCell.textContent = entry.timestamp;
+                stressLevelCell.textContent = entry.stress_level;
+
+                row.appendChild(timestampCell);
+                row.appendChild(stressLevelCell);
+                tableBody.appendChild(row);
+            });
+        }
+
+        function createChart(data) {
+            const ctx = document.getElementById("stressChart").getContext("2d");
+            const timestamps = data.map(entry => entry.timestamp);
+            const stressLevels = data.map(entry => entry.stress_level);
+
+            new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: "Stress Level",
+                        data: stressLevels,
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        backgroundColor: "rgba(75, 192, 192, 0.2)",
+                        borderWidth: 1,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: "Timestamp"
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: "Stress Level"
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        async function initializeDashboard() {
+            const data = await fetchData();
+            populateTable(data);
+            createChart(data);
+        }
+
+        // Initialize the dashboard
+        initializeDashboard();
+    </script>
+</body>
+</html>
